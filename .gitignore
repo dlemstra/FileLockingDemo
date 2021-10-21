@@ -3,3 +3,4 @@ bin
 obj
 app.config
 *.user
+*.exe
