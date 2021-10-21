@@ -14,7 +14,6 @@ namespace FileLockingDemo
         {
             Console.WriteLine("Starting");
 
-
             var inFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AppData");
             var outFolder1 = Path.Combine(inFolder, "MagickNetOutput");
             Directory.CreateDirectory(outFolder1);
@@ -22,10 +21,7 @@ namespace FileLockingDemo
             var outFolder2 = Path.Combine(inFolder, "MuPDFOutput");
             Directory.CreateDirectory(outFolder2);
 
-            var outFolder3 = Path.Combine(inFolder, "CpdfOutput");
-            Directory.CreateDirectory(outFolder3);
-
-            var task1 = Task.Run(() =>
+            Task.Run(() =>
             {
                 while (true)
                 {
@@ -44,24 +40,7 @@ namespace FileLockingDemo
                 }
             });
 
-            var task2 = Task.Run(() =>
-            {
-                while (true)
-                {
-                    var outFile = Cpdf(outFolder3);
-                    Console.WriteLine(outFile);
-                    if (FileHelper.IsFileLocked(new FileInfo(outFile), out var whoIsLocking))
-                    {
-                        throw new Exception($"The file  {outFile} created using Cpdf is locked by " + whoIsLocking.FirstOrDefault());
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Not locked, good! {outFile}");
-                    }
-                }
-            });
-            
-            var task3 = Task.Run(() =>
+            var task = Task.Run(() =>
             {
                 while (true)
                 {
@@ -69,7 +48,7 @@ namespace FileLockingDemo
                     Console.WriteLine(outFile);
                     if (FileHelper.IsFileLocked(new FileInfo(outFile), out var whoIsLocking))
                     {
-                        throw new Exception($"The file  {outFile} created using MagickNet is locked by " + whoIsLocking.FirstOrDefault());
+                        throw new Exception($"The file  {outFile} created using MagickNet is locked by " + whoIsLocking.FirstOrDefault()?.MainModule.FileName);
                     }
                     else
                     {
@@ -78,7 +57,7 @@ namespace FileLockingDemo
                 }
             });
 
-            Task.WaitAll(task1, task2, task3);
+            task.Wait();
             Console.ReadLine();
         }
 
@@ -97,7 +76,6 @@ namespace FileLockingDemo
                     Author = "Image",
                     Producer = "Prod"
                 });
-
 
                 image.Write(outTest1Pdf, MagickFormat.Pdf);
             }
@@ -126,29 +104,6 @@ namespace FileLockingDemo
             }
 
             return Directory.GetFiles(outFolder);
-        }
-
-        private static string Cpdf(string outFolder)
-        {
-            var exe = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cpdf.exe");
-            var inFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AppData", "test3.pdf");
-            var outFile = Path.Combine(outFolder, "result.pdf");
-
-            var p = new Process
-            {
-                StartInfo =
-                {
-                    FileName = exe,
-                    Arguments = $"-debug-force -encrypt 128bit test test \"{inFile}\" -o \"{outFile}\"",
-                    UseShellExecute = false
-                }
-            };
-            {
-                p.Start();
-                p.WaitForExit();
-            }
-
-            return outFile;
         }
     }
 }

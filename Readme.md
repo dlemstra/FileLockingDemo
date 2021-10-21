@@ -1,0 +1,2 @@
+- Download the file https://mupdf.com/downloads/archive/mupdf-1.19.0-windows.zip unzip it and copy mutool.exe to the root of this project.
+- Start the process and wait for the exception to be raised.
